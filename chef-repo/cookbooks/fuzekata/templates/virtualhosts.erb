@@ -1,0 +1,9 @@
+<VirtualHost *:<%= @port %>>
+    ServerAdmin <%= @serveradmin %>
+    ServerName <%= @servername %>
+    DocumentRoot <%= @document_root %>
+    DirectoryIndex fuse.html index.html
+    <Directory <%= @document_root %>>
+        Require all granted
+    </Directory>
+</VirtualHost>
