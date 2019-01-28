@@ -17,6 +17,28 @@ variable "network" {
   type    = "string"
 }
 
+variable "ssh_key_name" {
+  default = "tgroshon"
+  type    = "string"
+}
+
+variable "ubuntu_ami" {
+  # Lookup AMI with: "https://cloud-images.ubuntu.com/locator/"
+  default = "ami-08b8af1c94b41235d"
+  type    = "string"
+}
+
+variable "ip_whitelist_me" {
+  default = ""
+  type = "string"
+}
+
+variable "ip_whitelist_fuze" {
+  default = ""
+  type = "string"
+}
+
+
 data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
@@ -132,3 +154,59 @@ resource "aws_route_table_association" "private" {
   subnet_id      = "${element(aws_subnet.private.*.id, count.index)}"
   route_table_id = "${element(aws_route_table.private.*.id, count.index)}"
 }
+
+##########################
+# Provision the Test Box #
+##########################
+
+resource "aws_instance" "katabox" {
+  count = 1
+
+  ami           = "${var.ubuntu_ami}"
+  instance_type = "t2.micro"
+  key_name      = "${var.ssh_key_name}"
+
+  subnet_id     = "${element(aws_subnet.public.*.id, count.index)}"
+
+  tags = {
+    Name = "FuzeKataBox"
+  }
+}
+
+# Normally would do this, but would rather not commit IP addresses
+# to a public repo.  Will do manually in Console.
+#################################
+
+# resource "aws_security_group" "ssh" {
+#   name        = "SSH Whitelist"
+#   description = "Security group to restrict SSH access"
+#   vpc_id      = "${aws_vpc.main.id}"
+
+#   egress {
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+
+#   ingress {
+#     from_port   = 22
+#     to_port     = 22
+#     protocol    = "tcp"
+#     cidr_blocks = ["${var.ssh_my_id}/32", "${var.ip_whitelist_fuze}/32"]
+#   }
+
+#   ingress {
+#     from_port   = 80
+#     to_port     = 80
+#     protocol    = "tcp"
+#     cidr_blocks = ["${var.ssh_my_id}/32", "${var.ip_whitelist_fuze}/32"]
+#   }
+
+#   ingress {
+#     from_port   = 8080
+#     to_port     = 8080
+#     protocol    = "tcp"
+#     cidr_blocks = ["${var.ssh_my_id}/32", "${var.ip_whitelist_fuze}/32"]
+#   }
+# }
