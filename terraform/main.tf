@@ -28,16 +28,14 @@ variable "ubuntu_ami" {
   type    = "string"
 }
 
-variable "ip_whitelist_me" {
-  default = ""
+variable "security_group_id" {
+  default = "sg-0353c0a46f3f372b6"
   type = "string"
 }
 
-variable "ip_whitelist_fuze" {
-  default = ""
-  type = "string"
+data "aws_security_group" "kata" {
+  id = "${var.security_group_id}"
 }
-
 
 data "aws_availability_zones" "available" {}
 
@@ -167,6 +165,7 @@ resource "aws_instance" "katabox" {
   key_name      = "${var.ssh_key_name}"
 
   subnet_id     = "${element(aws_subnet.public.*.id, count.index)}"
+  vpc_security_group_ids = ["${data.aws_security_group.kata.id}"]
 
   tags = {
     Name = "FuzeKataBox"
